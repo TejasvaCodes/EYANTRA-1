@@ -118,7 +118,7 @@ void *control_loop(void *arg)
     float weightedSum = 0, sum = 0;
 
     // PID constants (tune these)
-    float Kp = 300.0, Ki = 0.0, Kd = 50.0;
+    float Kp = 300.0, Ki = 4.5, Kd = 500.0;
     float error = 0, previous_error = 0;
     float P, I, D, PID_value;
 
@@ -141,8 +141,8 @@ void *control_loop(void *arg)
         PID_value = (Kp * P) + (Ki * I) + (Kd * D);
         previous_error = error;
 
-        leftMotorSpeed = baseSpeed - (PID_value / 100.0f); // scale PID effect
-        rightMotorSpeed = baseSpeed + (PID_value / 100.0f);
+        leftMotorSpeed = baseSpeed - PID_value/100 ; // scale PID effect
+        rightMotorSpeed = baseSpeed + PID_value/100 ;
 
         // Limit speeds between -1 and 1
         if (leftMotorSpeed > 1.0f)
@@ -159,7 +159,7 @@ void *control_loop(void *arg)
         fflush(stdout);
 
         set_motor(c, rightMotorSpeed, leftMotorSpeed);
-        SLEEP(100);
+        SLEEP(400);
     }
     return NULL;
 }
