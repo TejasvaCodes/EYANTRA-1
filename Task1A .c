@@ -118,49 +118,54 @@ void *control_loop(void *arg)
     float weightedSum = 0, sum = 0;
 
     // PID constants (tune these)
-    float Kp = 300.0, Ki = 4.5, Kd = 500.0;
+    float Kp = 275.0, Ki = 0.3, Kd = 500.0;
     float error = 0, previous_error = 0;
     float P, I, D, PID_value;
 
-    float baseSpeed = 0.5;
+    float baseSpeed = 0.8;
     float leftMotorSpeed, rightMotorSpeed;
 
-    while (c->running)
+   while (c->running)
+{
+    weightedSum = 0;
+    sum = 0;
+
+    for (int i = 0; i < 5; i++)
     {
-        for (int i = 0; i < 5; i++)
-        {
-            float val = c->sensor_values[i] * 1000.0f; // normalize 0–1 to 0–1000
-            weightedSum += val * sensorWeights[i];
-            sum += val;
-        }
-        error = weightedSum / sum;
-        P = error;
-        I = I + error;
-        D = error - previous_error;
-
-        PID_value = (Kp * P) + (Ki * I) + (Kd * D);
-        previous_error = error;
-
-        leftMotorSpeed = baseSpeed - PID_value/100 ; // scale PID effect
-        rightMotorSpeed = baseSpeed + PID_value/100 ;
-
-        // Limit speeds between -1 and 1
-        if (leftMotorSpeed > 1.0f)
-            leftMotorSpeed = 1.0f;
-        if (rightMotorSpeed > 1.0f)
-            rightMotorSpeed = 1.0f;
-        if (leftMotorSpeed < -1.0f)
-            leftMotorSpeed = -1.0f;
-        if (rightMotorSpeed < -1.0f)
-            rightMotorSpeed = -1.0f;
-
-        printf("\nPID: %.3f | Error: %.3f | L: %.3f | R: %.3f",
-               PID_value, error, leftMotorSpeed, rightMotorSpeed);
-        fflush(stdout);
-
-        set_motor(c, rightMotorSpeed, leftMotorSpeed);
-        SLEEP(400);
+        float val = c->sensor_values[i] * 1000.0f; // normalize 0–1 to 0–1000
+        weightedSum += val * sensorWeights[i];
+        sum += val;
     }
+
+    if (sum != 0)
+        error = weightedSum / sum;
+    else
+        error = previous_error;  // handle line loss
+
+    P = error;
+    I = 0.9 * I + error; // smoother integral
+    if (I > 100) I = 100;
+    if (I < -100) I = -100;
+
+    D = error - previous_error;
+
+    PID_value = (Kp * P) + (Ki * I) + (Kd * D);
+    previous_error = error;
+
+    printf("\nP: %.3f | I: %.3f | D: %.3f | PID: %.3f\n", P, I, D, PID_value);
+
+    leftMotorSpeed  = baseSpeed - PID_value / 100;
+    rightMotorSpeed = baseSpeed + PID_value / 100;
+    // printf("\nLeft: %.2f | Right: %.2f",leftMotorSpeed,rightMotorSpeed);
+    if (leftMotorSpeed  > 1.0f) leftMotorSpeed  = 1.0f;
+    if (rightMotorSpeed > 1.0f) rightMotorSpeed = 1.0f;
+    if (leftMotorSpeed  < -1.0f) leftMotorSpeed  = -1.0f;
+    if (rightMotorSpeed < -1.0f) rightMotorSpeed = -1.0f;
+
+    set_motor(c, rightMotorSpeed, leftMotorSpeed);
+    SLEEP(20);
+}
+
     return NULL;
 }
 
@@ -205,11 +210,11 @@ int main()
         if (client.sensor_count > 0)
         {
             printf("\nSensors (%d): ", client.sensor_count);
-            //    for (int i = 0; i < client.sensor_count; i++)
-            //     {
-            //         printf("%.3f ", client.sensor_values[i]);
-            //     }
-            //     printf("\n");
+               for (int i = 0; i < client.sensor_count; i++)
+                {
+                    printf("%.3f ", client.sensor_values[i]);
+                }
+                printf("\n");
         }
         else
         {
@@ -222,4 +227,3 @@ int main()
     disconnect(&client);
     return 0;
 }
-
