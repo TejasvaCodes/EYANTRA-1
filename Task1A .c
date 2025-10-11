@@ -118,7 +118,7 @@ void *control_loop(void *arg)
     float weightedSum = 0, sum = 0;
 
     // PID constants (tune these)
-    float Kp = 275.0, Ki = 0.3, Kd = 500.0;
+    float Kp = 250.0, Ki = 0.3, Kd = 400.0;
     float error = 0, previous_error = 0;
     float P, I, D, PID_value;
 
