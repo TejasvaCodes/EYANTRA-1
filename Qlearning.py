@@ -46,9 +46,7 @@ class QLearningController:
         else:
             return -10
 
-    # ---------------------
-    # Q-learning update
-    # ---------------------
+
     def update_q_table(self, state, action, reward, next_state):
         a_idx = self.action_list.index(action)
         current_q = self.q_table[state][a_idx]
@@ -56,9 +54,7 @@ class QLearningController:
         new_q = current_q + self.lr * (reward + self.gamma * max_future_q - current_q)
         self.q_table[state][a_idx] = new_q
 
-    # ---------------------
-    # Action selection
-    # ---------------------
+
     def choose_action(self, state):
         if random.uniform(0,1) < self.epsilon:
             return random.choice(self.action_list)
@@ -66,9 +62,7 @@ class QLearningController:
             best_action_idx = np.argmax(self.q_table[state])
             return self.action_list[best_action_idx]
 
-    # ---------------------
-    # Convert action → motor speeds
-    # ---------------------
+
     def perform_action(self, action):
         base_speed = 2.0
         turn_speed = 1.0
@@ -81,9 +75,7 @@ class QLearningController:
         else:
             return 0,0
 
-    # ---------------------
-    # Save/load Q-table
-    # ---------------------
+
     def save_q_table(self):
         with open(self.filename,'wb') as f:
             pickle.dump({
@@ -105,7 +97,8 @@ class QLearningController:
             # Fix shape mismatch
             if self.q_table.shape != (self.n_states, self.n_actions):
                 self.q_table = np.zeros((self.n_states, self.n_actions))
-            print("[QLEARN] Q-table loaded from file.")
+            print(" Q-table loaded from file.")
             return True
-        print("[QLEARN] No saved Q-table found. Starting fresh.")
+        print(" No saved Q-table found. Starting fresh.")
+
         return False
