@@ -24,18 +24,16 @@ class QLearningController:
             print("[ERROR] Invalid sensor data:", sensor_data)
             return 0
 
-        # Threshold: 1 = black line, 0 = white
+        
         binary_vals = [1 if v < 0.5 else 0 for v in values]
 
-        # Convert to single integer
+        
         state = 0
         for i, val in enumerate(binary_vals):
             state |= (val << i)
         return state
 
-    # ---------------------
-    # Reward function
-    # ---------------------
+
     def Calculate_reward(self, sensor_data):
         if sensor_data == [0,0,1,0,0]:
             return 5
@@ -108,4 +106,5 @@ class QLearningController:
             print("[QLEARN] Q-table loaded from file.")
             return True
         print("[QLEARN] No saved Q-table found. Starting fresh.")
+
         return False
