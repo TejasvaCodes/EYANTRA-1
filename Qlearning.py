@@ -38,9 +38,13 @@ class QLearningController:
     # ---------------------
     def Calculate_reward(self, sensor_data):
         if sensor_data == [0,0,1,0,0]:
-            return 5
+            return 10
         elif sensor_data in ([0,1,1,0,0], [0,0,1,1,0]):
             return 2
+        elif sensor_data in ([0,1,0,0,0], [0,0,0,1,0]):
+            return 2
+        elif sensor_data in ([1,0,0,0,0], [0,0,0,0,1]):
+            return -1
         elif sum(sensor_data) > 0:
             return 1
         else:
@@ -70,8 +74,8 @@ class QLearningController:
     # Convert action → motor speeds
     # ---------------------
     def perform_action(self, action):
-        base_speed = 2.0
-        turn_speed = 1.0
+        base_speed = 0.5
+        turn_speed = 0.2
         if action == 0:
             return turn_speed, base_speed
         elif action == 1:
