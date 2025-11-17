@@ -86,7 +86,7 @@ def main():
         #  Read sensor data from simulator
         sensor_data = client.receive_sensor_data()
         if not sensor_data:
-            time.sleep(0.05)
+            time.sleep(0.03)
             continue  # Skip iteration if sensor data is invalid
 
         # Convert sensor data to a discrete state
@@ -116,12 +116,13 @@ def main():
         iteration += 1  # Increment training step count
 
         # Save Q-table periodically
+        print(f"[TRAIN] Iteration: {iteration}, State: {state}, Action: {action}, Reward: {reward}")
         if iteration % SAVE_INTERVAL == 0:
             ql.save_q_table()
             print(f"[TRAIN] Saved Q-table at iteration {iteration}")
 
         # Control loop timing
-        time.sleep(0.05)
+        time.sleep(0.03)
 
     # === When training is interrupted (Ctrl+C) ===
     ql.save_q_table()  # Save final Q-table before exiting
