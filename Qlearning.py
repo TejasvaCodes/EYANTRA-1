@@ -9,10 +9,13 @@ class QLearningController:
         self.n_actions = n_actions
         self.lr = 0.6        # learning rate α
         self.gamma = 0.8     # discount factor γ
-        self.epsilon = 0.2   # exploration probability ε
+        self.epsilon = 0.3   # exploration probability ε
         self.filename = filename
         self.q_table = np.zeros((n_states, n_actions))
         self.action_list = [0, 1, 2]  # 0 = LEFT, 1 = STRAIGHT, 2 = RIGHT
+        self.reward_history = []
+        self.reward_window = 6  # last 6 rewards to check
+
 
     # ---------------------
     # Convert sensors to state
@@ -37,18 +40,48 @@ class QLearningController:
     # Reward function
     # ---------------------
     def Calculate_reward(self, sensor_data):
-        if sensor_data == [0,0,1,0,0]:
+        if isinstance(sensor_data, dict):
+            try:
+                values = [float(sensor_data[key]) for key in ['left_corner', 'left', 'middle', 'right', 'right_corner']]
+            except KeyError:
+                print("[ERROR] Missing sensor key in:", sensor_data)
+                return -10
+        else:
+            values = sensor_data  # already list
+
+    # Convert to binary form
+        binary_vals = [1 if v < 0.5 else 0 for v in values]
+        total = sum(binary_vals)
+
+    # Now use your reward logic on binary_vals
+        if binary_vals == [0,0,1,0,0]:
             return 10
-        elif sensor_data in ([0,1,1,0,0], [0,0,1,1,0]):
+        elif binary_vals in ([0,1,1,0,0], [0,0,1,1,0]):
             return 2
-        elif sensor_data in ([0,1,0,0,0], [0,0,0,1,0]):
+        elif binary_vals in ([0,1,0,0,0], [0,0,0,1,0]):
             return 2
-        elif sensor_data in ([1,0,0,0,0], [0,0,0,0,1]):
+        elif binary_vals in ([1,0,0,0,0], [0,0,0,0,1]):
             return -1
-        elif sum(sensor_data) > 0:
+            # --- Special case: sum == 5 (all sensors on black line) ---
+        elif total == 5:
+            if len(self.reward_history) >= 3:  # make sure we have some history
+                avg_recent = sum(self.reward_history[-3:]) / 3
+                if avg_recent > 0:
+                    return 15   # robot was following well → likely a 90° turn
+                else:
+                    return -15  # robot was lost → likely crossing the line
+            else:
+                return 0  # neutral if we have no context yet
+
+        elif total > 0:
             return 1
         else:
-            return -10
+            return -10  # completely off track
+
+    # Update reward history
+        self.reward_history.append(reward)
+        if len(self.reward_history) > self.reward_window:
+            self.reward_history.pop(0)
 
     # ---------------------
     # Q-learning update
@@ -113,3 +146,4 @@ class QLearningController:
             return True
         print("[QLEARN] No saved Q-table found. Starting fresh.")
         return False
+
